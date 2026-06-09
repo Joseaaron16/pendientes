@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pendientes — Grupo Penta</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #222; --border: #2e2e2e; --border2: #3a3a3a;
+  --text: #f0ede8; --text2: #888; --text3: #555;
+  --accent: #e8c547;
+  --ja: #4a9eff; --ja-bg: rgba(74,158,255,0.1);
+  --fachl: #52c77a; --fachl-bg: rgba(82,199,122,0.1);
+  --santi: #c084fc; --santi-bg: rgba(192,132,252,0.1);
+  --danger: #ff6b6b; --warn: #f97316; --ok: #52c77a;
+  --radius: 10px; --radius-sm: 6px;
+  font-family: 'DM Sans', sans-serif;
+}
+body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(15,15,15,0.93); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px; height: 54px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.logo { font-size: 15px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+.logo span { color: var(--text2); font-weight: 400; }
+.sync-row { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); transition: background .3s; }
+.sync-dot.live { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+.sync-lbl { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+.nav { display: flex; gap: 2px; background: var(--surface); border-radius: var(--radius-sm); padding: 3px; flex-wrap: wrap; }
+.nav-btn {
+  padding: 5px 12px; border-radius: 4px; border: none;
+  background: transparent; color: var(--text2);
+  font-size: 12px; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.nav-btn.active { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.nav-btn:hover:not(.active) { color: var(--text); }
+.nav-btn.has-alert { position: relative; }
+.nav-btn.has-alert::after {
+  content: ''; position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--danger);
+}
+
+.main { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+/* ── RESUMEN ── */
+.resumen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 12px; margin-bottom: 24px; }
+.res-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+  cursor: pointer; transition: border-color .15s;
+}
+.res-card:hover { border-color: var(--border2); }
+.res-card-top { display: flex; align-items: center; justify-content: space-between; }
+.res-label { font-size: 11px; color: var(--text2); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .04em; }
+.res-icon { font-size: 18px; }
+.res-number { font-size: 30px; font-weight: 600; color: var(--text); line-height: 1; }
+.res-sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.res-members { display: flex; gap: 10px; margin-top: 2px; flex-wrap: wrap; }
+.res-member { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text2); }
+.dot-ja { width: 6px; height: 6px; border-radius: 50%; background: var(--ja); flex-shrink:0; }
+.dot-fachl { width: 6px; height: 6px; border-radius: 50%; background: var(--fachl); flex-shrink:0; }
+.dot-santi { width: 6px; height: 6px; border-radius: 50%; background: var(--santi); flex-shrink:0; }
+
+/* ALERTAS */
+.alertas-section { margin-bottom: 24px; }
+.alertas-title { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+.alerta-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface); border-left: 3px solid var(--danger);
+  border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 7px;
+  animation: fadeIn .2s ease;
+}
+.alerta-item.warn { border-left-color: var(--warn); }
+.alerta-icon { font-size: 18px; flex-shrink: 0; }
+.alerta-body { flex: 1; }
+.alerta-title { font-size: 14px; font-weight: 500; }
+.alerta-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.alerta-dias {
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  padding: 3px 10px; border-radius: 99px;
+  background: rgba(255,107,107,.15); color: var(--danger);
+  flex-shrink: 0;
+}
+.alerta-dias.warn { background: rgba(249,115,22,.15); color: var(--warn); }
+.alerta-dias.hoy { background: rgba(255,107,107,.25); color: var(--danger); font-weight: 600; }
+.no-alertas { font-size: 13px; color: var(--text3); font-family: 'DM Mono', monospace; padding: 10px 0; }
+
+/* ── SECTION HEADER ── */
+.sec-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.sec-title { font-size: 16px; font-weight: 500; }
+.sec-count { font-size: 12px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+/* ── MEMBERS GRID ── */
+.members-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+@media (max-width: 760px) { .members-grid { grid-template-columns: 1fr; } }
+.member-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.col-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.av-ja { background: var(--ja-bg); color: var(--ja); border: 1px solid rgba(74,158,255,.3); }
+.av-fachl { background: var(--fachl-bg); color: var(--fachl); border: 1px solid rgba(82,199,122,.3); }
+.av-santi { background: var(--santi-bg); color: var(--santi); border: 1px solid rgba(192,132,252,.3); }
+.col-name { font-size: 14px; font-weight: 500; flex: 1; }
+.col-count-badge { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text3); background: var(--surface2); padding: 2px 7px; border-radius: 99px; border: 1px solid var(--border); }
+.col-body { padding: 12px 14px; }
+.add-row { display: flex; gap: 5px; margin-bottom: 10px; }
+.add-input { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 10px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color .15s; min-width: 0; }
+.add-input:focus { border-color: var(--border2); }
+.add-input::placeholder { color: var(--text3); }
+.add-btn { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); color: var(--text2); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+.task-list { display: flex; flex-direction: column; gap: 4px; min-height: 40px; }
+.task-empty { font-size: 11px; color: var(--text3); text-align: center; padding: 16px 0; font-family: 'DM Mono', monospace; }
+.task-item { display: flex; align-items: flex-start; gap: 7px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid transparent; transition: border-color .15s; animation: fadeIn .18s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:translateY(0); } }
+.task-item:hover { border-color: var(--border); }
+.task-item.done { opacity: .4; }
+.task-cb { margin-top: 2px; flex-shrink: 0; cursor: pointer; accent-color: var(--accent); width: 13px; height: 13px; }
+.task-text { flex: 1; font-size: 13px; line-height: 1.45; color: var(--text); }
+.task-item.done .task-text { text-decoration: line-through; color: var(--text3); }
+.del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; padding: 0 1px; opacity: 0; transition: opacity .15s, color .15s; flex-shrink: 0; line-height: 1; }
+.task-item:hover .del-btn { opacity: 1; }
+.del-btn:hover { color: var(--danger); }
+.sec-sep { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text3); letter-spacing: .06em; text-transform: uppercase; padding: 8px 0 3px; }
+
+/* ── LICENCIAS ── */
+.lic-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.lic-add-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 7px 14px;
+  font-size: 13px; color: var(--text2); cursor: pointer;
+  transition: all .15s; font-family: 'DM Sans', sans-serif;
+}
+.lic-add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.lic-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--surface2); }
+th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 500; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.lic-nombre { color: var(--text); font-weight: 500; }
+.lic-dias {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+  display: inline-block;
+}
+.dias-ok { background: rgba(82,199,122,.12); color: var(--ok); }
+.dias-warn { background: rgba(249,115,22,.15); color: var(--warn); }
+.dias-danger { background: rgba(255,107,107,.15); color: var(--danger); }
+.dias-vencido { background: rgba(255,107,107,.25); color: var(--danger); font-weight: 600; }
+.badge-tipo {
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  padding: 2px 7px; border-radius: 99px;
+  background: rgba(255,255,255,.06); color: var(--text3);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.badge-tipo.licencia { background: var(--ja-bg); color: var(--ja); }
+.badge-tipo.tarjeta { background: var(--santi-bg); color: var(--santi); }
+.badge-tipo.servicio { background: var(--fachl-bg); color: var(--fachl); }
+.estado-ok { color: var(--ok); }
+.estado-pend { color: var(--accent); }
+.estado-cancel { color: var(--danger); }
+.lic-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 13px; opacity: 0; transition: opacity .15s, color .15s; }
+.lic-edit { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 14px; opacity: 0; transition: opacity .15s, color .15s; }
+tr:hover .lic-del, tr:hover .lic-edit { opacity: 1; }
+.lic-del:hover { color: var(--danger); }
+.lic-edit:hover { color: var(--accent); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 24px; width: 100%; max-width: 460px;
+  transform: translateY(10px); transition: transform .2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal h3 { font-size: 16px; font-weight: 500; margin-bottom: 18px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .04em; }
+.form-input, .form-select {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 8px 10px;
+  font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  outline: none; transition: border-color .15s; width: 100%;
+}
+.form-input:focus, .form-select:focus { border-color: var(--border2); }
+.form-input::placeholder { color: var(--text3); }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.btn-cancel { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.btn-cancel:hover { color: var(--text); }
+.btn-save { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--accent); background: rgba(232,197,71,.1); color: var(--accent); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+.btn-save:hover { background: rgba(232,197,71,.2); }
+
+/* TOTALES COBRANZA */
+.cob-row { cursor: pointer; }
+.cob-row:hover td { background: rgba(255,255,255,.015) !important; }
+.cob-total-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 16px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.cob-total-label { font-size: 11px; color: var(--text3); font-family: "DM Mono", monospace; text-transform: uppercase; letter-spacing: .04em; }
+.cob-total-amount { font-size: 20px; font-weight: 600; color: var(--accent); }
+.cob-total-sub { font-size: 11px; color: var(--text3); font-family: "DM Mono", monospace; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-size: 12px; font-family: 'DM Mono', monospace; padding: 7px 16px; border-radius: 99px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 999; }
+.toast.show { opacity: 1; }
+.loading { text-align: center; padding: 24px 0; color: var(--text3); font-family: 'DM Mono', monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">Pendientes <span>/ Grupo Penta</span></div>
+  <nav class="nav" id="mainNav">
+    <button class="nav-btn active" onclick="showView('resumen')">Resumen</button>
+    <button class="nav-btn" onclick="showView('cotizaciones')">Cotizaciones</button>
+    <button class="nav-btn" onclick="showView('facturacion')">Facturación</button>
+    <button class="nav-btn" onclick="showView('notas')">Notas</button>
+    <button class="nav-btn" onclick="showView('tareas')">Tareas físicas</button>
+    <button class="nav-btn" onclick="showView('pendientes')">Pendientes</button>
+    <button class="nav-btn" onclick="showView('cobranza')">Cobranza</button>
+    <button class="nav-btn" id="nav-licencias" onclick="showView('licencias')">Licencias & Pagos</button>
+  </nav>
+  <div class="sync-row">
+    <div class="sync-dot" id="syncDot"></div>
+    <div class="sync-lbl" id="syncLbl">conectando</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- RESUMEN -->
+  <div id="view-resumen">
+    <div id="alertas-container"></div>
+    <div class="resumen-grid" id="resumen-cards"></div>
+  </div>
+
+  <!-- SECCIONES PENDIENTES -->
+  <div id="view-cotizaciones" style="display:none">
+    <div class="sec-header"><div class="sec-title">Cotizaciones</div><div class="sec-count" id="total-cotizaciones"></div></div>
+    <div class="members-grid" id="grid-cotizaciones"></div>
+  </div>
+  <div id="view-facturacion" style="display:none">
+    <div class="sec-header"><div class="sec-title">Facturación</div><div class="sec-count" id="total-facturacion"></div></div>
+    <div class="members-grid" id="grid-facturacion"></div>
+  </div>
+  <div id="view-notas" style="display:none">
+    <div class="sec-header"><div class="sec-title">Notas</div><div class="sec-count" id="total-notas"></div></div>
+    <div class="members-grid" id="grid-notas"></div>
+  </div>
+  <div id="view-tareas" style="display:none">
+    <div class="sec-header"><div class="sec-title">Tareas físicas</div><div class="sec-count" id="total-tareas"></div></div>
+    <div class="members-grid" id="grid-tareas"></div>
+  </div>
+  <div id="view-pendientes" style="display:none">
+    <div class="sec-header"><div class="sec-title">Pendientes</div><div class="sec-count" id="total-pendientes"></div></div>
+    <div class="members-grid" id="grid-pendientes"></div>
+  </div>
+  <div id="view-cobranza" style="display:none">
+    <div class="lic-toolbar">
+      <div>
+        <div class="sec-title">Cuentas por cobrar</div>
+        <div class="sec-count" id="cob-count-lbl" style="margin-top:3px"></div>
+      </div>
+      <button class="lic-add-btn" onclick="openCobModal()">+ Agregar</button>
+    </div>
+    <div class="lic-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Responsable</th>
+            <th>Monto / Saldo</th>
+            <th>Fecha límite</th>
+            <th>Días</th>
+            <th>Estado</th>
+            <th>Notas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cob-tbody"><tr><td colspan="8" class="loading">Cargando…</td></tr></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:16px; flex-wrap:wrap;" id="cob-totales"></div>
+  </div>
+
+  <!-- LICENCIAS & PAGOS -->
+  <div id="view-licencias" style="display:none">
+    <div class="lic-toolbar">
+      <div>
+        <div class="sec-title">Licencias &amp; Pagos</div>
+        <div class="sec-count" id="lic-count-lbl" style="margin-top:3px"></div>
+      </div>
+      <button class="lic-add-btn" onclick="openModal()">+ Agregar</button>
+    </div>
+    <div class="lic-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre / Servicio</th>
+            <th>Tipo</th>
+            <th>Cliente / Área</th>
+            <th>Frecuencia</th>
+            <th>Próx. pago</th>
+            <th>Días</th>
+            <th>Estado</th>
+            <th>Notas</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="lic-tbody"><tr><td colspan="9" class="loading">Cargando…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL AGREGAR / EDITAR -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h3 id="modal-title">Agregar licencia / pago</h3>
+    <input type="hidden" id="f-edit-id"/>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Nombre / Servicio</label>
+        <input class="form-input" id="f-nombre" placeholder="ej. Adobe, Tarjeta HSBC…"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" id="f-tipo">
+          <option value="licencia">Licencia</option>
+          <option value="tarjeta">Tarjeta de crédito</option>
+          <option value="servicio">Servicio</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cliente / Área</label>
+        <input class="form-input" id="f-cliente" placeholder="ej. Pesca, PL, Interno…"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Frecuencia</label>
+        <select class="form-select" id="f-frecuencia">
+          <option value="Mensual">Mensual</option>
+          <option value="Anual">Anual</option>
+          <option value="Quincenal">Quincenal</option>
+          <option value="Semanal">Semanal</option>
+          <option value="Única vez">Única vez</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Próxima fecha de pago</label>
+        <input class="form-input" id="f-fecha" type="date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="f-estado">
+          <option value="Pendiente">Pendiente</option>
+          <option value="ok">Ok / Pagado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notas</label>
+        <input class="form-input" id="f-notas" placeholder="Notas adicionales…"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveEntry()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COBRANZA -->
+<div class="modal-overlay" id="cobModalOverlay" onclick="if(event.target.id==='cobModalOverlay') window.closeCobModal()">
+  <div class="modal">
+    <h3 id="cob-modal-title">Agregar cuenta por cobrar</h3>
+    <input type="hidden" id="cf-edit-id"/>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Cliente</label>
+        <input class="form-input" id="cf-cliente" placeholder="Nombre del cliente…"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsable</label>
+        <select class="form-select" id="cf-responsable">
+          <option value="José Aarón">José Aarón</option>
+          <option value="FACHL">FACHL</option>
+          <option value="Santiago">Santiago</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monto ($)</label>
+        <input class="form-input" id="cf-monto" type="number" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha límite de cobro</label>
+        <input class="form-input" id="cf-fecha" type="date"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="cf-estado">
+          <option value="Pendiente">Pendiente</option>
+          <option value="Cobrado">Cobrado</option>
+          <option value="Vencido">Vencido</option>
+          <option value="En proceso">En proceso</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notas</label>
+        <input class="form-input" id="cf-notas" placeholder="Notas adicionales…"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="window.closeCobModal()">Cancelar</button>
+      <button class="btn-save" onclick="window.saveCobEntry()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ABONO -->
+<div class="modal-overlay" id="abonoOverlay" onclick="if(event.target.id==='abonoOverlay') window.closeAbonoModal()">
+  <div class="modal" style="max-width:360px">
+    <h3>Registrar abono</h3>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Cliente: <strong id="ab-cliente" style="color:var(--text)"></strong></p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Monto del abono ($)</label>
+        <input class="form-input" id="ab-monto" type="number" min="0" step="0.01" placeholder="0.00" onkeydown="if(event.key==='Enter') window.saveAbono()"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha del abono</label>
+        <input class="form-input" id="ab-fecha" type="date"/>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Nota (opcional)</label>
+        <input class="form-input" id="ab-nota" placeholder="ej. transferencia, efectivo…"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="window.closeAbonoModal()">Cancelar</button>
+      <button class="btn-save" onclick="window.saveAbono()">Guardar abono</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDvE1X0qsshiQhnjhgqoIRjQ4RfwjZ19NM",
+  authDomain: "pendientes-penta.firebaseapp.com",
+  databaseURL: "https://pendientes-penta-default-rtdb.firebaseio.com",
+  projectId: "pendientes-penta",
+  storageBucket: "pendientes-penta.firebasestorage.app",
+  messagingSenderId: "61182993005",
+  appId: "1:61182993005:web:2ab426496893c2dddcd564"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const MEMBERS = [
+  { id:'ja',    name:'José Aarón', initials:'JA', avClass:'av-ja',    dotClass:'dot-ja' },
+  { id:'fachl', name:'FACHL',      initials:'FA', avClass:'av-fachl', dotClass:'dot-fachl' },
+  { id:'santi', name:'Santiago',   initials:'SA', avClass:'av-santi', dotClass:'dot-santi' },
+];
+const SECTIONS = [
+  { id:'cotizaciones', label:'Cotizaciones',   icon:'📄' },
+  { id:'facturacion',  label:'Facturación',    icon:'🧾' },
+  { id:'notas',        label:'Notas',          icon:'📝' },
+  { id:'tareas',       label:'Tareas físicas', icon:'🔧' },
+  { id:'pendientes',   label:'Pendientes',     icon:'📌' },
+];
+
+let allData = {};
+SECTIONS.forEach(s => { allData[s.id] = {}; MEMBERS.forEach(m => { allData[s.id][m.id] = {}; }); });
+let licData = {};
+let cobData = {};
+
+function setLive() {
+  document.getElementById('syncDot').classList.add('live');
+  document.getElementById('syncLbl').textContent = 'en vivo';
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── DÍAS RESTANTES ─────────────────────────────────────────────
+function diasRestantes(fechaStr) {
+  if (!fechaStr) return null;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const fecha = new Date(fechaStr + 'T00:00:00');
+  return Math.round((fecha - hoy) / 86400000);
+}
+
+function diasClass(d) {
+  if (d === null) return 'dias-ok';
+  if (d < 0) return 'dias-vencido';
+  if (d <= 3) return 'dias-danger';
+  if (d <= 7) return 'dias-warn';
+  return 'dias-ok';
+}
+
+function diasLabel(d) {
+  if (d === null) return '—';
+  if (d < 0) return `Vencido (${Math.abs(d)}d)`;
+  if (d === 0) return '¡Hoy!';
+  return `${d} días`;
+}
+
+// ── ALERTAS ────────────────────────────────────────────────────
+function renderAlertas() {
+  const container = document.getElementById('alertas-container');
+  const navBtn = document.getElementById('nav-licencias');
+  const proximos = Object.entries(licData)
+    .map(([id,v]) => ({ id, ...v, dias: diasRestantes(v.fecha) }))
+    .filter(v => v.dias !== null && v.dias <= 5 && v.estado !== 'cancelado')
+    .sort((a,b) => a.dias - b.dias);
+
+  if (proximos.length === 0) {
+    container.innerHTML = '';
+    navBtn.classList.remove('has-alert');
+    return;
+  }
+
+  navBtn.classList.add('has-alert');
+
+  let html = `<div class="alertas-section">
+    <div class="alertas-title">⚠️ Pagos próximos</div>`;
+
+  proximos.forEach(item => {
+    const isHoy = item.dias === 0;
+    const isVencido = item.dias < 0;
+    const cls = isVencido || isHoy ? '' : 'warn';
+    const diasTxt = isVencido ? `Venció hace ${Math.abs(item.dias)} día(s)` : isHoy ? '¡Vence hoy!' : `Vence en ${item.dias} día(s)`;
+    const diasTagCls = isVencido || isHoy ? (isHoy ? 'hoy' : '') : 'warn';
+    html += `<div class="alerta-item ${cls}">
+      <div class="alerta-icon">${item.tipo === 'tarjeta' ? '💳' : item.tipo === 'servicio' ? '⚙️' : '🔑'}</div>
+      <div class="alerta-body">
+        <div class="alerta-title">${escHtml(item.nombre)}</div>
+        <div class="alerta-sub">${escHtml(item.cliente||'')}${item.cliente ? ' · ' : ''}${escHtml(item.frecuencia||'')}${item.notas ? ' · ' + escHtml(item.notas) : ''}</div>
+      </div>
+      <div class="alerta-dias ${diasTagCls}">${diasTxt}</div>
+    </div>`;
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ── LICENCIAS TABLE ────────────────────────────────────────────
+function renderLicencias() {
+  const tbody = document.getElementById('lic-tbody');
+  const lbl = document.getElementById('lic-count-lbl');
+  const items = Object.entries(licData).map(([id,v]) => ({ id, ...v }));
+  items.sort((a,b) => {
+    const da = diasRestantes(a.fecha) ?? 9999;
+    const db2 = diasRestantes(b.fecha) ?? 9999;
+    return da - db2;
+  });
+
+  const activos = items.filter(i => i.estado !== 'cancelado').length;
+  if (lbl) lbl.textContent = `${activos} activo${activos!==1?'s':''}`;
+
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="task-empty" style="text-align:center;padding:24px">Sin registros — agrega uno con el botón +</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = items.map(item => {
+    const dias = diasRestantes(item.fecha);
+    const dCls = diasClass(dias);
+    const dLbl = diasLabel(dias);
+    const tipoCls = item.tipo || 'otro';
+    const estadoCls = item.estado === 'ok' ? 'estado-ok' : item.estado === 'cancelado' ? 'estado-cancel' : 'estado-pend';
+    const fechaFmt = item.fecha ? item.fecha.split('-').reverse().join('/') : '—';
+    return `<tr>
+      <td class="lic-nombre">${escHtml(item.nombre||'')}</td>
+      <td><span class="badge-tipo ${tipoCls}">${escHtml(item.tipo||'')}</span></td>
+      <td>${escHtml(item.cliente||'')}</td>
+      <td>${escHtml(item.frecuencia||'')}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${fechaFmt}</td>
+      <td><span class="lic-dias ${dCls}">${dLbl}</span></td>
+      <td class="${estadoCls}">${escHtml(item.estado||'')}</td>
+      <td style="max-width:160px;color:var(--text3)">${escHtml(item.notas||'')}</td>
+      <td style="display:flex;gap:6px;align-items:center">
+        <button class="lic-edit" onclick="window.editLic('${item.id}')" title="Editar">✎</button>
+        <button class="lic-del" onclick="window.delLic('${item.id}')" title="Eliminar">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── FIREBASE LISTENERS ─────────────────────────────────────────
+SECTIONS.forEach(s => {
+  MEMBERS.forEach(m => {
+    onValue(ref(db, `v2/${s.id}/${m.id}`), snap => {
+      allData[s.id][m.id] = snap.val() || {};
+      renderColumn(s.id, m.id);
+      renderResumen();
+      updateSectionTotal(s.id);
+      setLive();
+    });
+  });
+});
+
+onValue(ref(db, 'licencias'), snap => {
+  licData = snap.val() || {};
+  renderLicencias();
+  renderAlertas();
+  setLive();
+});
+
+// ── COBRANZA ──────────────────────────────────────────────────
+function fmt(n) {
+  return '$' + Number(n||0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function getAbonos(item) {
+  return Object.entries(item.abonos || {}).map(([k,v]) => ({...v, _id:k}));
+}
+function totalAbonado(item) {
+  return getAbonos(item).reduce((s,a) => s + Number(a.monto||0), 0);
+}
+function saldoRestante(item) {
+  return Math.max(0, Number(item.monto||0) - totalAbonado(item));
+}
+
+function renderCobranza() {
+  const tbody = document.getElementById('cob-tbody');
+  const lbl = document.getElementById('cob-count-lbl');
+  const totalesEl = document.getElementById('cob-totales');
+  if (!tbody) return;
+  const items = Object.entries(cobData).map(([id,v]) => ({id,...v}));
+  items.sort((a,b) => { const da=diasRestantes(a.fecha)??9999; const db2=diasRestantes(b.fecha)??9999; return da-db2; });
+
+  const pendientes = items.filter(i => i.estado !== 'Cobrado');
+  const saldoGral = pendientes.reduce((s,i) => s + saldoRestante(i), 0);
+  if (lbl) lbl.textContent = pendientes.length + ' cuenta' + (pendientes.length!==1?'s':'') + ' pendiente' + (pendientes.length!==1?'s':'') + ' · ' + fmt(saldoGral) + ' saldo por cobrar';
+
+  if (items.length === 0) {
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="task-empty" style="text-align:center;padding:24px">Sin registros — agrega uno con el botón +</td></tr>';
+    if (totalesEl) totalesEl.innerHTML = '';
+    return;
+  }
+
+  if (tbody) tbody.innerHTML = items.map(item => {
+    const dias = diasRestantes(item.fecha);
+    const dCls = item.estado === 'Cobrado' ? 'dias-ok' : diasClass(dias);
+    const dLbl = item.estado === 'Cobrado' ? '—' : diasLabel(dias);
+    const fechaFmt = item.fecha ? item.fecha.split('-').reverse().join('/') : '—';
+    const estadoCls = item.estado === 'Cobrado' ? 'estado-ok' : item.estado === 'Vencido' ? 'estado-cancel' : 'estado-pend';
+    const abonados = totalAbonado(item);
+    const saldo = saldoRestante(item);
+    const abList = getAbonos(item).sort((a,b)=>a.ts-b.ts);
+    const tieneAbonos = abList.length > 0;
+
+    const abonosHTML = tieneAbonos ? abList.map(a =>
+      `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;min-width:70px">${a.fecha ? a.fecha.split('-').reverse().join('/') : '—'}</span>
+        <span style="font-size:12px;color:var(--ok);font-family:'DM Mono',monospace;flex:1">${fmt(a.monto)}</span>
+        <span style="font-size:11px;color:var(--text3);flex:2">${escHtml(a.nota||'')}</span>
+        <button onclick="window.delAbono('${item.id}','${a._id}')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0 2px" title="Eliminar abono">✕</button>
+      </div>`).join('') : '';
+
+    return `<tr class="cob-row" onclick="window.toggleAbonos('${item.id}')">
+      <td class="lic-nombre">${escHtml(item.cliente||'')}${tieneAbonos?'<span style="font-size:10px;margin-left:6px;color:var(--text3)">▾ '+abList.length+' abono'+(abList.length!==1?'s':'')+'</span>':''}</td>
+      <td style="color:var(--text2)">${escHtml(item.responsable||'')}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">
+        <div style="color:var(--text2);font-size:11px">Total: ${fmt(item.monto)}</div>
+        ${abonados>0?'<div style="color:var(--ok);font-size:11px">Abonado: '+fmt(abonados)+'</div>':''}
+        <div style="color:var(--accent);font-weight:600">Saldo: ${fmt(saldo)}</div>
+      </td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px">${fechaFmt}</td>
+      <td><span class="lic-dias ${dCls}">${dLbl}</span></td>
+      <td class="${estadoCls}">${escHtml(item.estado||'')}</td>
+      <td style="max-width:140px;color:var(--text3)">${escHtml(item.notas||'')}</td>
+      <td onclick="event.stopPropagation()"><div style="display:flex;gap:6px;align-items:center">
+        <button class="lic-edit" onclick="window.openAbonoModal('${item.id}')" title="Agregar abono">+$</button>
+        <button class="lic-edit" onclick="window.editCob('${item.id}')" title="Editar">✎</button>
+        <button class="lic-del" onclick="window.delCob('${item.id}')" title="Eliminar">✕</button>
+      </div></td>
+    </tr>
+    <tr id="abonos-row-${item.id}" style="display:none">
+      <td colspan="9" style="padding:0;background:var(--surface2)">
+        <div style="padding:12px 16px">
+          <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Abonos de ${escHtml(item.cliente||'')}</div>
+          ${tieneAbonos ? abonosHTML : '<div style="font-size:12px;color:var(--text3);padding:4px 0">Sin abonos registrados aún</div>'}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Totales por responsable (por saldo)
+  const byResp = {};
+  MEMBERS.forEach(m => { byResp[m.name] = 0; });
+  pendientes.forEach(i => {
+    const k = i.responsable || '';
+    byResp[k] = (byResp[k]||0) + saldoRestante(i);
+  });
+  if (totalesEl) {
+    let html = `<div class="cob-total-card"><div class="cob-total-label">Saldo total por cobrar</div><div class="cob-total-amount">${fmt(saldoGral)}</div><div class="cob-total-sub">${pendientes.length} cuenta${pendientes.length!==1?'s':''} activa${pendientes.length!==1?'s':''}</div></div>`;
+    MEMBERS.forEach(m => {
+      if (byResp[m.name] > 0) {
+        html += `<div class="cob-total-card"><div class="cob-total-label">${m.name}</div><div class="cob-total-amount" style="font-size:16px">${fmt(byResp[m.name])}</div></div>`;
+      }
+    });
+    totalesEl.innerHTML = html;
+  }
+}
+
+window.toggleAbonos = (id) => {
+  const row = document.getElementById('abonos-row-' + id);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
+};
+
+// Abono modal
+let currentCobId = null;
+window.openAbonoModal = (cobId) => {
+  currentCobId = cobId;
+  const item = cobData[cobId];
+  document.getElementById('ab-cliente').textContent = item ? item.cliente : '';
+  document.getElementById('ab-monto').value = '';
+  document.getElementById('ab-fecha').value = '';
+  document.getElementById('ab-nota').value = '';
+  document.getElementById('abonoOverlay').classList.add('open');
+  document.getElementById('ab-monto').focus();
+};
+window.closeAbonoModal = () => { document.getElementById('abonoOverlay').classList.remove('open'); currentCobId = null; };
+window.saveAbono = () => {
+  const monto = parseFloat(document.getElementById('ab-monto').value);
+  if (!monto || monto <= 0) { document.getElementById('ab-monto').focus(); return; }
+  const fecha = document.getElementById('ab-fecha').value;
+  const nota  = document.getElementById('ab-nota').value.trim();
+  push(ref(db, `cobranza/${currentCobId}/abonos`), { monto, fecha, nota, ts: Date.now() });
+  toast('Abono guardado ✓');
+  window.closeAbonoModal();
+};
+window.delAbono = (cobId, abonoId) => {
+  remove(ref(db, `cobranza/${cobId}/abonos/${abonoId}`));
+  toast('Abono eliminado');
+};
+
+onValue(ref(db, 'cobranza'), snap => {
+  cobData = snap.val() || {};
+  renderCobranza();
+  renderResumen();
+  setLive();
+});
+
+// Modal cobranza
+function fillCobModal(data = {}) {
+  document.getElementById('cf-cliente').value    = data.cliente     || '';
+  document.getElementById('cf-responsable').value= data.responsable || 'José Aarón';
+  document.getElementById('cf-monto').value      = data.monto       || '';
+  document.getElementById('cf-fecha').value      = data.fecha       || '';
+  document.getElementById('cf-estado').value     = data.estado      || 'Pendiente';
+  document.getElementById('cf-notas').value      = data.notas       || '';
+  document.getElementById('cf-edit-id').value    = data._id         || '';
+}
+window.openCobModal = () => {
+  document.getElementById('cob-modal-title').textContent = 'Agregar cuenta por cobrar';
+  fillCobModal();
+  document.getElementById('cobModalOverlay').classList.add('open');
+  document.getElementById('cf-cliente').focus();
+};
+window.editCob = (id) => {
+  const item = cobData[id];
+  if (!item) return;
+  document.getElementById('cob-modal-title').textContent = 'Editar cuenta por cobrar';
+  fillCobModal({ ...item, _id: id });
+  document.getElementById('cobModalOverlay').classList.add('open');
+  document.getElementById('cf-cliente').focus();
+};
+window.closeCobModal = () => document.getElementById('cobModalOverlay').classList.remove('open');
+window.saveCobEntry = () => {
+  const cliente = document.getElementById('cf-cliente').value.trim();
+  if (!cliente) { document.getElementById('cf-cliente').focus(); return; }
+  const editId = document.getElementById('cf-edit-id').value;
+  const entry = {
+    cliente,
+    responsable: document.getElementById('cf-responsable').value,
+    monto:       parseFloat(document.getElementById('cf-monto').value) || 0,
+    fecha:       document.getElementById('cf-fecha').value,
+    estado:      document.getElementById('cf-estado').value,
+    notas:       document.getElementById('cf-notas').value.trim(),
+    ts:          Date.now(),
+  };
+  if (editId) { update(ref(db, `cobranza/${editId}`), entry); toast('Actualizado ✓'); }
+  else { push(ref(db, 'cobranza'), entry); toast('Guardado ✓'); }
+  window.closeCobModal();
+};
+window.delCob = (id) => { remove(ref(db, `cobranza/${id}`)); toast('Eliminado'); };
+
+// ── TASKS ──────────────────────────────────────────────────────
+function renderColumn(section, member) {
+  const data = allData[section][member] || {};
+  const tasks = Object.entries(data).map(([id,v]) => ({id,...v}));
+  const active = tasks.filter(t => !t.done).sort((a,b) => a.ts - b.ts);
+  const done   = tasks.filter(t =>  t.done).sort((a,b) => a.ts - b.ts);
+  const listEl = document.getElementById(`list-${section}-${member}`);
+  const badgeEl = document.getElementById(`badge-${section}-${member}`);
+  if (!listEl) return;
+  badgeEl.textContent = active.length + (active.length===1?' pendiente':' pendientes');
+  if (tasks.length === 0) { listEl.innerHTML = '<div class="task-empty">Sin pendientes ✓</div>'; return; }
+  let html = '';
+  active.forEach(t => { html += taskHTML(section, member, t); });
+  if (done.length > 0) {
+    html += '<div class="sec-sep">Completados</div>';
+    done.forEach(t => { html += taskHTML(section, member, t); });
+  }
+  listEl.innerHTML = html;
+}
+
+function taskHTML(section, member, t) {
+  return `<div class="task-item ${t.done?'done':''}" id="ti-${t.id}">
+    <input type="checkbox" class="task-cb" ${t.done?'checked':''} onchange="window.toggleTask('${section}','${member}','${t.id}',this.checked)"/>
+    <span class="task-text">${escHtml(t.text)}</span>
+    <button class="del-btn" onclick="window.delTask('${section}','${member}','${t.id}')">✕</button>
+  </div>`;
+}
+
+function renderResumen() {
+  const container = document.getElementById('resumen-cards');
+  let html = '';
+  SECTIONS.forEach(s => {
+    let total=0, ja=0, fachl=0, santi=0;
+    MEMBERS.forEach(m => {
+      const n = Object.values(allData[s.id][m.id]||{}).filter(t=>!t.done).length;
+      total+=n;
+      if(m.id==='ja') ja=n;
+      if(m.id==='fachl') fachl=n;
+      if(m.id==='santi') santi=n;
+    });
+    html += `<div class="res-card" onclick="showView('${s.id}')">
+      <div class="res-card-top"><span class="res-label">${s.label}</span><span class="res-icon">${s.icon}</span></div>
+      <div class="res-number">${total}</div>
+      <div class="res-sub">pendiente${total!==1?'s':''} activo${total!==1?'s':''}</div>
+      <div class="res-members">
+        <span class="res-member"><span class="dot-ja"></span>JA: ${ja}</span>
+        <span class="res-member"><span class="dot-fachl"></span>FA: ${fachl}</span>
+        <span class="res-member"><span class="dot-santi"></span>SA: ${santi}</span>
+      </div>
+    </div>`;
+  });
+  // Card licencias
+  const proximos = Object.values(licData).filter(v => { const d=diasRestantes(v.fecha); return d!==null && d<=5 && v.estado!=='cancelado'; }).length;
+  const totalLic = Object.values(licData).filter(v=>v.estado!=='cancelado').length;
+  html += `<div class="res-card" onclick="showView('licencias')" style="${proximos>0?'border-color:rgba(255,107,107,.4)':''}">
+    <div class="res-card-top"><span class="res-label">Licencias &amp; Pagos</span><span class="res-icon">${proximos>0?'⚠️':'💳'}</span></div>
+    <div class="res-number" style="${proximos>0?'color:var(--danger)':''}">${proximos>0?proximos:totalLic}</div>
+    <div class="res-sub">${proximos>0?'pago(s) próximo(s) ≤5 días':totalLic+' registro'+( totalLic!==1?'s':'') +' activo'+(totalLic!==1?'s':'')}</div>
+  </div>`;
+  // Cobranza card
+  const cobPend = Object.values(cobData).filter(v=>v.estado!=='Cobrado');
+  const cobTotal = cobPend.reduce((s,i)=>s+Number(i.monto||0),0);
+  html += `<div class="res-card" onclick="showView('cobranza')" style="${cobPend.length>0?'border-color:rgba(232,197,71,.25)':''}">
+    <div class="res-card-top"><span class="res-label">Cobranza</span><span class="res-icon">💰</span></div>
+    <div class="res-number" style="color:var(--accent);font-size:20px">${cobPend.length>0?'$'+Number(cobTotal).toLocaleString('es-MX',{minimumFractionDigits:0,maximumFractionDigits:0}):'0'}</div>
+    <div class="res-sub">${cobPend.length} cuenta${cobPend.length!==1?'s':''} pendiente${cobPend.length!==1?'s':''}</div>
+  </div>`;
+  // Grand total
+  let grand=0;
+  SECTIONS.forEach(s=>MEMBERS.forEach(m=>{ grand+=Object.values(allData[s.id][m.id]||{}).filter(t=>!t.done).length; }));
+  html += `<div class="res-card" style="border-color:rgba(232,197,71,.2)">
+    <div class="res-card-top"><span class="res-label">Total general</span><span class="res-icon">📌</span></div>
+    <div class="res-number" style="color:var(--accent)">${grand}</div>
+    <div class="res-sub">pendientes en el equipo</div>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function updateSectionTotal(sectionId) {
+  const el = document.getElementById(`total-${sectionId}`);
+  if (!el) return;
+  let t=0; MEMBERS.forEach(m => { t+=Object.values(allData[sectionId][m.id]||{}).filter(x=>!x.done).length; });
+  el.textContent = t+' pendiente'+(t!==1?'s':'')+' en total';
+}
+
+function buildGrid(sectionId) {
+  const grid = document.getElementById(`grid-${sectionId}`);
+  if (!grid || grid.dataset.built) return;
+  grid.dataset.built = '1';
+  grid.innerHTML = MEMBERS.map(m => `
+    <div class="member-col">
+      <div class="col-head">
+        <div class="avatar ${m.avClass}">${m.initials}</div>
+        <div class="col-name">${m.name}</div>
+        <div class="col-count-badge" id="badge-${sectionId}-${m.id}">—</div>
+      </div>
+      <div class="col-body">
+        <div class="add-row">
+          <input class="add-input" id="input-${sectionId}-${m.id}" placeholder="Agregar..." onkeydown="if(event.key==='Enter') window.addTask('${sectionId}','${m.id}')"/>
+          <button class="add-btn" onclick="window.addTask('${sectionId}','${m.id}')">+</button>
+        </div>
+        <div class="task-list" id="list-${sectionId}-${m.id}"><div class="loading">…</div></div>
+      </div>
+    </div>`).join('');
+  MEMBERS.forEach(m => renderColumn(sectionId, m.id));
+}
+
+// ── GLOBAL ACTIONS ─────────────────────────────────────────────
+window.addTask = (section, member) => {
+  const input = document.getElementById(`input-${section}-${member}`);
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  push(ref(db, `v2/${section}/${member}`), { text, done: false, ts: Date.now() });
+  input.value = ''; input.focus();
+};
+window.toggleTask = (section, member, id, checked) => update(ref(db, `v2/${section}/${member}/${id}`), { done: checked });
+window.delTask = (section, member, id) => { remove(ref(db, `v2/${section}/${member}/${id}`)); toast('Eliminado'); };
+window.delLic = (id) => { remove(ref(db, `licencias/${id}`)); toast('Registro eliminado'); };
+
+// ── MODAL ──────────────────────────────────────────────────────
+function fillModal(data = {}) {
+  document.getElementById('f-nombre').value    = data.nombre    || '';
+  document.getElementById('f-tipo').value      = data.tipo      || 'licencia';
+  document.getElementById('f-cliente').value   = data.cliente   || '';
+  document.getElementById('f-frecuencia').value= data.frecuencia|| 'Mensual';
+  document.getElementById('f-fecha').value     = data.fecha     || '';
+  document.getElementById('f-estado').value    = data.estado    || 'Pendiente';
+  document.getElementById('f-notas').value     = data.notas     || '';
+  document.getElementById('f-edit-id').value   = data._id       || '';
+}
+
+window.openModal = () => {
+  document.getElementById('modal-title').textContent = 'Agregar licencia / pago';
+  fillModal();
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('f-nombre').focus();
+};
+window.editLic = (id) => {
+  const item = licData[id];
+  if (!item) return;
+  document.getElementById('modal-title').textContent = 'Editar licencia / pago';
+  fillModal({ ...item, _id: id });
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('f-nombre').focus();
+};
+window.closeModal = () => document.getElementById('modalOverlay').classList.remove('open');
+window.closeModalOutside = (e) => { if (e.target.id === 'modalOverlay') window.closeModal(); };
+
+window.saveEntry = () => {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if (!nombre) { document.getElementById('f-nombre').focus(); return; }
+  const editId = document.getElementById('f-edit-id').value;
+  const entry = {
+    nombre,
+    tipo:       document.getElementById('f-tipo').value,
+    cliente:    document.getElementById('f-cliente').value.trim(),
+    frecuencia: document.getElementById('f-frecuencia').value,
+    fecha:      document.getElementById('f-fecha').value,
+    estado:     document.getElementById('f-estado').value,
+    notas:      document.getElementById('f-notas').value.trim(),
+    ts:         Date.now(),
+  };
+  if (editId) {
+    update(ref(db, `licencias/${editId}`), entry);
+    toast('Actualizado ✓');
+  } else {
+    push(ref(db, 'licencias'), entry);
+    toast('Guardado ✓');
+  }
+  window.closeModal();
+};
+
+// ── VIEWS ──────────────────────────────────────────────────────
+const VIEWS = ['resumen','cotizaciones','facturacion','notas','tareas','pendientes','cobranza','licencias'];
+window.showView = (view) => {
+  VIEWS.forEach(v => { document.getElementById('view-'+v).style.display = v===view?'':'none'; });
+  document.querySelectorAll('.nav-btn').forEach((btn,i) => { btn.classList.toggle('active', VIEWS[i]===view); });
+  if (view !== 'resumen' && view !== 'licencias' && view !== 'cobranza') buildGrid(view);
+};
+
+renderResumen();
+</script>
+</body>
+</html>
